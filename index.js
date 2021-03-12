@@ -2,17 +2,14 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var userList = [];
-var userListExcept = [];
 var typingUsers = {};
 var roomList = [];
-var value = "";
-const t3237 = require("./objects/t3237");
+
 
 io.on('connection', function(clientSocket){
   console.log('a user connected');
   clientSocket.on('disconnect', function(){
     console.log('user disconnected');
-
     var clientNickname;
     for (var i=0; i<userList.length; i++) {
       if (userList[i]["f3"] == clientSocket.id) {
@@ -21,7 +18,7 @@ io.on('connection', function(clientSocket){
       }
     } 
     delete typingUsers[clientNickname];
-    // io.emit("userList", {key:userList});
+    io.emit("userList", {key:userList});
     userListExcept = userList.slice();
         for (var i=0; i<userListExcept.length; i++) {
           if (userListExcept[i]["f3"] == clientSocket.id) {
@@ -51,22 +48,10 @@ io.on('connection', function(clientSocket){
     io.emit("userTypingUpdate", typingUsers);
     io.emit('newChatMessage', clientNickname, message, currentDateTime);
   });
-  clientSocket.on("connectUser", function(clientNickname) {
-      var message = "Token received: " + clientNickname;
+  clientSocket.on('connectUser', function(clientNickname) {
+      var message = `User ${clientNickname} was connected`;
       console.log(message);    
-      //kiem tra token
-       t3237.exitsToken(clientNickname).then(function(data) {
-        var numRow =  data.length;
-        if(numRow ==0) {
-          console.log("Token invalid,disconnect socket");
-          clientSocket.emit("notify",{key:"Login failed"});
-          clientSocket.disconnect();
-        }
-        else {
-          var paRse = JSON.parse(JSON.stringify(data));
-          value = paRse[0].f2;  
-          clientSocket.emit("userName",{username:value});      
-            var userInfo = {};
+      var userInfo = {};
             var foundUser = false;
             for (var i=0; i<userList.length; i++) {
              if (userList[i]["f1"] == value) {
@@ -83,22 +68,10 @@ io.on('connection', function(clientSocket){
           userInfo["f3"] = clientSocket.id;
           userList.push(userInfo);
         }
-        clientSocket.emit("notify",{key:"Logged in successfully"});
-        console.log(userList);
-        // io.emit("userList", {key:userList});
-        userListExcept = userList.slice();
-        for (var i=0; i<userListExcept.length; i++) {
-          if (userListExcept[i]["f3"] == clientSocket.id) {
-            userListExcept.splice(i, 1);
-            userListExcept = userList.slice();
-                   
-          }
-        }
-        io.emit("userList", {key:userListExcept});   
+       
+        io.emit("userList", {key:userList});      
         io.emit("userExitUpdate", {key:clientNickname});
         io.emit("userConnectUpdate",{key:userInfo} );
-        }
-       });
   });
 
   clientSocket.on('room',data=>{
@@ -143,7 +116,7 @@ io.on('connection', function(clientSocket){
 });
 
 app.get('/', function(req, res){
-  res.send('<h1>SofLife - SocketChat Server</h1>');
+  res.send('<h1>Socket.io</h1>');
 });
 
 
