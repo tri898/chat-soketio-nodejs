@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Test WebSockets</title>
+ 	<style>
+            div#log{
+            width: 500px;
+            height: 300px;
+            margin: auto;
+            border: 5px solid;
+            border-radius: 7px;
+            }
+  	div#sendCtrls {
+                width: 221px;
+                margin: auto;
+                margin: 20px auto;
+            }
+        </style>
+    </head>
+    <body>
+ 	<div id="log"> </div>
+
+        <div id="sendCtrls">
+            <input type="text" placeholder="Your message here" id="text">
+            <button>Send</button>
+        </div>
+
+        <script>
+            var name = prompt('What your name?'); 
+            var sock = new WebSocket("ws://10.10.1.5:3000");
+            sock.onopen = function() {
+                sock.send(JSON.stringify({     
+                        name: "name",
+                        data: name
+                }));
+            }
+            var log = document.getElementById('log');
+            sock.onmessage= function(event) {
+                console.log(event);
+                var json = JSON.parse(event.data);
+                log.innerHTML +=json.name+": "+ json.data+ "<br>";
+            };
+            document.querySelector('button').onclick=function(){
+                    var text = document.getElementById('text').value;
+                    sock.send(JSON.stringify({       
+                            type: "message",
+                            data: text
+
+                    }));
+                    log.innerHTML +="You" + text +"<br>";
+
+            }
+        </script>
+    </body>
+</html>
